@@ -1,4 +1,4 @@
-name: Avro-cloudflared
+name: Avro-Cloudflared
 
 on:
   workflow_dispatch:
@@ -16,6 +16,7 @@ jobs:
       - name: Download and Install Cloudflared
         run: |
           Invoke-WebRequest -Uri "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" -OutFile "$env:USERPROFILE\cloudflared.exe"
+          Start-Sleep -Seconds 5
 
       # Step 3: Enable Remote Desktop and Firewall Rules
       - name: Enable Remote Desktop
@@ -24,12 +25,10 @@ jobs:
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
 
-      # Step 4: Start Cloudflared Tunnel
+      # Step 4: Start Cloudflared Tunnel (No Token Needed)
       - name: Start Cloudflared Tunnel
-        env:
-          CLOUDFLARED_TOKEN: ${{ secrets.CLOUDFLARED_TOKEN }}
         run: |
-          Start-Process -FilePath "$env:USERPROFILE\cloudflared.exe" -ArgumentList "tunnel run --token $env:CLOUDFLARED_TOKEN" -NoNewWindow -Wait
+          Start-Process -FilePath "$env:USERPROFILE\cloudflared.exe" -ArgumentList "access tcp --hostname YOUR_DOMAIN_HERE --url RDP_SERVER_IP:3389" -NoNewWindow -Wait
 
       # Step 5: Keep the GitHub Action Runner Alive
       - name: Keep the GitHub Action Runner Alive
@@ -39,7 +38,7 @@ jobs:
             Start-Sleep -Seconds 300
           }
 
-      # Step 6: Trigger New Workflow Run
+      # Step 6: Trigger the workflow again
       - name: Trigger New Workflow Run
         if: always()
         env:
